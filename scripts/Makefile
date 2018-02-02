@@ -50,4 +50,4 @@ label-default:
 	kubectl get namespace -L istio-injection
 
 deploy-sleep:
-	kubectl create -f sleep.yaml
+	kubectl create -f samples/sleep/sleep.yaml
