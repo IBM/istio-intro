@@ -1,80 +1,101 @@
-## Istio Setup
+## Circuit-breaker
 
-These notes are for information and are not necessarily designed to be shown in the demo. This should be setup ahead of presentation start.
+Now that we have reviewed the metrics Mixer is collecting, let's start generating some failures. 
+We will be using a simple application that will respond to our requests with an HTTP status code.
+We want to test out the circuit-breaking features of Istio by generating load incremently with an application called fortio.
 
-1. Start Minikube
+We start with a basic Istio route rule (samples/httpbin/routerules/httpbin-v1.yaml) that will direct all of our traffic for the httpbin service to services with the version v1 label. 
+We will also create a new Istio DestinationPolicy (samples/httpbin/destinationpolicies/httpbin-circuit-breaker.yaml). This will allow us to limit the impact that other clients can have on our service during failures, erratic network chatter, etc. (Review notes about the options set in destinationpolicyfile)
 
-```bash
-make minikube
+```shell
+make ct2
 ```
 
-2. Download latest istio release
+Let's start to generate some load to the httpbin backend to see if we can trip the circuit.
 
-```bash
-make download
+Our first load test will be with one call to ensure that we return a 200.
+```shell
+make ct4
+```
+Our single request completes with a 200.
+
+Let's trip the breaker with 2 connections and 20 requests. Our current circuit-breaker settings only allow 1 connection and 1 pending request. We should see a 500 for at least one request in our load generation.
+
+```shell
+make ct5
 ```
 
-3. Deploy Istio control plane
+After running this load test twice we now see our 503 error codes going up. 
 
-```bash
-make setup
+Let's generate even more load with 3 connections and 20 requests.
+
+```shell
+make ct6
 ```
 
-4. Confirm control plane setup was successful (CTRL-C to stop watch)
+## Failure testing
 
-```bash
-make watch
+To test how our service deals with failure, we will try to inject some delays within our bookinfo service. This service will display books with brief descriptions. It will also dispaly ratings by calling on a seperate service.
+
+Let's view a working example of our application. 
+
+```shell
+minikube service istio-ingress -n istio-system
 ```
 
-5. Create Istio sidecar injector certificates
-
-```bash
-make create-cert
+We create a default routing rule to enable all of our services to connect with each other over version v1 labels
+```shell
+make rrc
 ```
 
-6. Confirm certificate creation was successful
+From our browser Network dev tools we can see that our landing page is loading all of its services in around X milliseconds.
 
-```bash
-make check-cert
+Let's switch everyone over to v2 and introduce some latency between reviews and book details.
+
+```shell
+make rt1
 ```
 
-7. Deploy istio-inject configmap 
+We now get pretty stars on our landing page and our network latency has gone up slightly to X milliseconds. Now are users depend on the stars to always show up and we want to see how are system reacts when we introduce delays in calling to our reviews.
 
-```bash
-make deploy-configmap
+If we look at our grafana Istio dashboard we can see some metrics already being collected for us in regards to our interaction with the bookinfo service.
+
+```shell
+kubectl -n istio-system port-forward $(kubectl -n istio-system get pod -l app=grafana -o jsonpath='{.items[0].metadata.name}') 3000:3000 &
 ```
 
-8. Confirm configmap creation was successful
-```bash
-make check-configmap
+We now introduce an artificial 2 second latency for all requests to our ratings backend service with a httpFault RouteRule
+(manifests/2secratings.yaml)
+
+```shell
+make rt2
 ```
 
-9. Create Istio sidecar CA bundle
+Notice how our Network debug tools always return in 2+ seconds when we refresh the page. Our ratings service graphs also show increase responce time for our 99th percentile of requests.
 
-```bash
-make create-cabundle 
+Now that we have artifical latency set, we can introduce a mandatory request timeout of 1 second for client's calling our reviews service. (manifests/1secreviews.yaml). Our 2 second latency should now cause failures because we timeout requests in 1 second when calling to the reviews service. We should see failures when calling to the reviews service.
+
+```shell
+make rt3
 ```
 
-10. Deploy sidecar injector
+Now when we reload the page, we see an error returned indicating that we cannot fetch reviews for our book. And if we lower our grafana viewing window to 15 minutes, we see all of the metrics indicating 400s from our reviews service.
 
-```bash
-make deploy-injector 
+If we cleanup the delays we caused, our metrics should indicate that we are back to normal.
+
+```shell
+make rtclean
 ```
 
-11. Check sidecar injector was deployed successfully
+Grafana shows that our 400s are now decreasing and we're back to version 1 success.
 
-```bash
-make check-injector 
-```
+## Traffic shifting with Header Filtering
 
-12. Label default namespace to enable sidecar injection
+We will use our book information example again to dark launch our star ratings service our colleague Jason to test.
 
-```bash
-make label-default 
-```
+Our new rule ( scripts/samples/bookinfo/kube/route-rule-reviews-test-v2.yaml ) will filter all requests for user=jason to the v2 service while everyone else will continue to see v1. 
 
-13. Confirm injecion is working with sleep sample
-
-```bash
-make deploy sleep 
+```shell
+make rrc
+make rr1
 ```
