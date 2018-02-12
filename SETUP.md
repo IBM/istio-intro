@@ -15,7 +15,7 @@ These notes are for information and are not necessarily designed to be shown in 
 
 ### Demo Preparation
 
-Run the following commands from the scripts directory
+Run the following commands from the scripts directory or simply run the [setup script](./setup.sh)
 
 - Start minikube
 
