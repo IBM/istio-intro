@@ -13,15 +13,23 @@ These notes are for information and are not necessarily designed to be shown in 
 - Istio 0.5.0 
   - `make download` from the scripts directory
 
+### Minikube Environment
+
+- WARNING: This command contains a MacOS workaround for cluster certificates
+- WARNING: ClusterSigningCertFile & ClusterSigningKeyFile may not work on non-MacOS platforms
+
+minikube:
+```shell
+minikube start \
+	--extra-config=controller-manager.ClusterSigningCertFile="/var/lib/localkube/certs/ca.crt" \
+	--extra-config=controller-manager.ClusterSigningKeyFile="/var/lib/localkube/certs/ca.key" \
+	--extra-config=apiserver.Admission.PluginNames=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota \
+	--kubernetes-version=v1.9.0
+```
+
 ### Demo Preparation
 
-Run the following commands from the scripts directory
-
-- Start minikube
-
-```shell
-make minikube
-```
+Run the following commands from the scripts directory or simply run the [setup script](./setup.sh)
 
 - Deploy Istio control plane (sometimes need to run twice due to CRD create race conditions)
 

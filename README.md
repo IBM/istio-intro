@@ -2,24 +2,18 @@
 getting to know istio meetup content
 
 ## Setup
-- DEMO.md
-- Follow all instructions for dev accounts in the [flight-status README](https://github.com/estesp/flightassist/blob/master/README.md#external-service-pre-requisites)
-- Download or clone [flightstatus code](https://github.com/estesp/flightassist)
-- Build flightassist local image and tag to your desired repository
-```bash
-cd flightassist
-make localimage
-docker tag $SHA mydockerrepo/flightassist:0.0.1
-docker push mydockerrepo/flightassist:0.0.1
-```
-- Fill in [secrets.yaml](https://github.com/estesp/flightassist/blob/master/secret.yaml)
-- Download or clone [flightassist-weather](https://github.com/estesp/flightassist-weather)
+- Follow the prerequisites in [SETUP.md](./SETUP.md)
+- Use the [setup script](./scripts/setup.sh) when you are ready to prepare your kubernetes cluster
 
-- Build fi local image and tag to your desired repository
-```bash
-cd flightassist-weather
-make localimage
-docker tag weather-service:v1 mydockerrepo/weather-service:0.0.1
-docker push mydockerrepo/weather-service:0.0.1
-```
+## Demos
+
+The [DEMO](./DEMO.md) contains a walkthrough of each demo and what script to run. 
+<b>All demo scripts should be run within the manifests directory.</b>
+
+- Each demo script will halt for a user to press a button when further explanation is needed before continuing.
+- Files will be presented to the screen after the command runs so that the presenter can review
+what was just created while Istio is setting routes.
+- Each demo has it's own unique script that will cleanup everything created as the final step. 
+
+
 
