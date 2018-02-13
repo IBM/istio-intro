@@ -19,6 +19,7 @@ read -n 1 -s -r -p "Press any key to continue"
 kubectl exec -it $FORTIO_POD --container fortio -- /usr/local/bin/fortio load -c 2 -qps 0 -n 20 -loglevel Warning http://httpbin:8000/get
 
 echo "We now increase our load to 3 connections with 20 requests. These should cause even more 503s"
+read -n 1 -s -r -p "Press any key to continue"
 kubectl exec -it $FORTIO_POD --container fortio -- /usr/local/bin/fortio load -c 3 -qps 0 -n 20 -loglevel Warning http://httpbin:8000/get
 
 echo "Ready to cleanup circuit-breaker"

@@ -7,7 +7,7 @@ kubectl apply -f ./v2reviews.yaml
 echo "RouteRulev2 ###########################
 #############################################
 #############################################"
-cat ./v2reviews.yaml 
+cat ./v2reviews.yaml
 
 echo "Ready to create and view 2sec latency to ratings backend"
 read -n 1 -s -r -p "Press any key to continue"
@@ -15,7 +15,7 @@ kubectl apply -f ./2secratings.yaml
 echo "Ratings httpFault #####################
 #############################################
 #############################################"
-cat ./v2secratings.yaml
+cat ./2secratings.yaml
 
 echo "Ready to create and view 1 second timeout"
 read -n 1 -s -r -p "Press any key to continue"
